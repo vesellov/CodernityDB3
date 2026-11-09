@@ -24,7 +24,6 @@ import os
 import inspect
 from functools import wraps
 import json
-from six.moves import range
 from io import open
 import codecs
 
@@ -38,7 +37,7 @@ class DebugTreeBasedIndex(TreeBasedIndex):
         print('-----CURRENT TREE-----')
         print((self.root_flag))
 
-        if self.root_flag == 'l':
+        if self.root_flag == b'l':
             print('---ROOT---')
             self._print_leaf_data(self.data_start)
             return
@@ -54,8 +53,8 @@ class DebugTreeBasedIndex(TreeBasedIndex):
                 nodes.append(l_pointer)
             nodes.append(r_pointer)
             print(('ROOT NODES', nodes))
-            while children_flag == 'n':
-                self._print_level(nodes, 'n')
+            while children_flag == b'n':
+                self._print_level(nodes, b'n')
                 new_nodes = []
                 for node in nodes:
                     nr_of_el, children_flag = \
@@ -66,14 +65,14 @@ class DebugTreeBasedIndex(TreeBasedIndex):
                         new_nodes.append(l_pointer)
                     new_nodes.append(r_pointer)
                 nodes = new_nodes
-            self._print_level(nodes, 'l')
+            self._print_level(nodes, b'l')
 
     def _print_level(self, nodes, flag):
         print('---NEXT LVL---')
-        if flag == 'n':
+        if flag == b'n':
             for node in nodes:
                 self._print_node_data(node)
-        elif flag == 'l':
+        elif flag == b'l':
             for node in nodes:
                 self._print_leaf_data(node)
 

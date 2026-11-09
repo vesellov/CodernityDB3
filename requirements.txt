@@ -1,10 +1,6 @@
-cov-core
+# CodernityDB3 has no runtime dependencies (Python 3.8+).
+# The packages below are only required to run the test suite.
 coverage
-execnet
-py
 pytest
 pytest-cov
 pytest-xdist
-six
-# must be already in Python3
-# wsgiref

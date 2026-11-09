@@ -17,10 +17,8 @@
 
 
 from __future__ import absolute_import
-import six
 import functools
 from random import choice
-from six.moves import range
 
 
 def create_cache1lvl(lock_obj):
@@ -31,7 +29,7 @@ def create_cache1lvl(lock_obj):
 
             @functools.wraps(user_function)
             def wrapper(key, *args, **kwargs):
-                if isinstance(key, six.text_type):
+                if isinstance(key, str):
                     key = key.encode()            
                 try:
                     result = cache[key]
@@ -48,7 +46,7 @@ def create_cache1lvl(lock_obj):
                 cache.clear()
 
             def delete(key):
-                if isinstance(key, six.text_type):
+                if isinstance(key, str):
                     key = key.encode()            
                 try:
                     del cache[key]
@@ -74,7 +72,7 @@ def create_cache2lvl(lock_obj):
             def wrapper(*args, **kwargs):
                 key = args[0]
                 # print('rr_cache_with_lock.2lvl.wrapper %r' % key)
-                if isinstance(key, six.text_type):
+                if isinstance(key, str):
                     key = key.encode()            
                 try:
                     result = cache[key][args[1]]
@@ -103,7 +101,7 @@ def create_cache2lvl(lock_obj):
 
             def delete(key, *args):
                 # print('rr_cache_with_lock.2lvl.delete %r' % key)
-                if isinstance(key, six.text_type):
+                if isinstance(key, str):
                     key = key.encode()            
                 if args:
                     try:

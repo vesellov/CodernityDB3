@@ -16,7 +16,6 @@
 # limitations under the License.
 
 from __future__ import absolute_import
-import six
 import os
 import struct
 import shutil
@@ -94,7 +93,7 @@ class IU_Storage(object):
         if os.path.exists(os.path.join(self.db_path, self.name + "_stor")):
             raise IOError("Storage already exists!")
         with io.open(os.path.join(self.db_path, self.name + "_stor"), 'wb') as f:
-            if isinstance(self.__version__, six.text_type):
+            if isinstance(self.__version__, str):
                 new_version = self.__version__.encode()
             else:
                 new_version = self.__version__

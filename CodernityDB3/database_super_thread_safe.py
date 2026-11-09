@@ -53,7 +53,9 @@ class SuperLock(type):
         for base in bases:
             for b_attr in dir(base):
                 a = getattr(base, b_attr, None)
-                if isinstance(a, MethodType) and not b_attr.startswith('_'):
+                # In Python 3 unbound methods are plain functions, so accept
+                # both FunctionType and MethodType here.
+                if isinstance(a, (FunctionType, MethodType)) and not b_attr.startswith('_'):
                     if b_attr == 'flush' or b_attr == 'flush_indexes':
                         pass
                     else:
@@ -77,6 +79,14 @@ class SuperThreadSafeDatabase(Database, metaclass=SuperLock):
 
     def __init__(self, *args, **kwargs):
         super(SuperThreadSafeDatabase, self).__init__(*args, **kwargs)
+
+    def all(self, *args, **kwargs):
+        # Database.all is a generator: locking only the call is not enough,
+        # every next() must be protected together with its storage reads.
+        return th_safe_gen('db_all', super(SuperThreadSafeDatabase, self).all(*args, **kwargs), self.super_lock)
+
+    def get_many(self, *args, **kwargs):
+        return th_safe_gen('db_get_many', super(SuperThreadSafeDatabase, self).get_many(*args, **kwargs), self.super_lock)
 
     def __patch_index_gens(self, name):
         ind = self.indexes_names[name]

@@ -30,7 +30,7 @@ class CustomHashIndex(HashIndex):
         d = data.get('test')
         if d is None:
             return None
-        if d > str(5):
+        if str(d) > '5':
             k = 1
         else:
             k = 0

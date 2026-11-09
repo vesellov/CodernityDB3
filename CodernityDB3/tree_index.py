@@ -17,7 +17,6 @@
 
 
 from __future__ import absolute_import
-import six
 from .index import Index, IndexException, DocIdNotFound, ElemNotFound
 import struct
 import marshal
@@ -73,7 +72,7 @@ class IU_TreeBasedIndex(Index):
         self._count_props()
         if not storage_class:
             storage_class = IU_Storage
-        if storage_class and not isinstance(storage_class, six.string_types):
+        if storage_class and not isinstance(storage_class, str):
             storage_class = storage_class.__name__
         self.storage_class = storage_class
         self.storage = None
@@ -171,7 +170,7 @@ class IU_TreeBasedIndex(Index):
     def _insert_empty_root(self):
         self.buckets.seek(self.data_start)
         # Fix types
-        if isinstance(self.leaf_heading_format, six.text_type):
+        if isinstance(self.leaf_heading_format, str):
             fixed_leaf = self.leaf_heading_format.encode()
         else:
             fixed_leaf = self.leaf_heading_format.encode()
@@ -183,11 +182,11 @@ class IU_TreeBasedIndex(Index):
 
     def insert(self, doc_id, key, start, size, status=b'o'):
         # Fix types
-        if isinstance(doc_id, six.text_type):
+        if isinstance(doc_id, str):
             doc_id = doc_id.encode()
-        if isinstance(key, six.text_type):
+        if isinstance(key, str):
             key = codecs.encode(key, 'utf-8')
-        if isinstance(status, six.text_type):
+        if isinstance(status, str):
             status = status.encode()
 
         nodes_stack, indexes = self._find_leaf_to_insert(key)
@@ -239,7 +238,7 @@ class IU_TreeBasedIndex(Index):
         data = self.buckets.read(self.single_node_record_size)
         flag_left, key, pointer_right = struct.unpack(
             '<' + self.single_node_record_format, data)
-        if isinstance(key, six.text_type):
+        if isinstance(key, str):
             key = codecs.encode(key, 'utf-8')
         return flag_left, key, pointer_right
 
@@ -252,7 +251,7 @@ class IU_TreeBasedIndex(Index):
         data = self.buckets.read(self.single_leaf_record_size)
         key, doc_id, start, size, status = struct.unpack(
             b'<' + str(self.single_leaf_record_format).encode(), data)
-        if isinstance(key, six.text_type):
+        if isinstance(key, str):
             key = codecs.encode(key, 'utf-8')
         return key, doc_id, start, size, status
 
@@ -324,7 +323,7 @@ class IU_TreeBasedIndex(Index):
         self.buckets.seek(self._calculate_key_position(leaf_start, key_index, b'l')
                           + self.key_size)
         # Fix types
-        if isinstance(self.meta_format, six.text_type):
+        if isinstance(self.meta_format, str):
             fixed_meta_format = self.meta_format.encode()
         else:
             fixed_meta_format = self.meta_format
@@ -449,7 +448,7 @@ class IU_TreeBasedIndex(Index):
         """
         Binary search implementation used in all get functions
         """
-        if isinstance(key, six.text_type):
+        if isinstance(key, str):
             key = codecs.encode(key, 'utf-8')
         imin, imax = 0, nr_of_elements - 1
         buffer_start, buffer_end = self._set_buffer_limits()
@@ -694,7 +693,7 @@ class IU_TreeBasedIndex(Index):
                  curr_size, curr_status) = self._read_single_leaf_record(
                      leaf_start,
                      chosen_key_position - 1)
-                if curr_start == b'd' or curr_start == 'd':
+                if curr_status == b'd' or curr_status == 'd':
                     new_record_position = chosen_key_position - 1
                     nr_of_records_to_rewrite = 0
                     full_leaf = False
@@ -716,7 +715,7 @@ class IU_TreeBasedIndex(Index):
                  curr_size, curr_status) = self._read_single_leaf_record(
                      leaf_start,
                      chosen_key_position + 1)
-                if curr_start == b'd' or curr_start == 'd':
+                if curr_status == b'd' or curr_status == 'd':
                     new_record_position = chosen_key_position + 1
                     nr_of_records_to_rewrite = 0
                     full_leaf = False
@@ -890,15 +889,15 @@ class IU_TreeBasedIndex(Index):
             nr_of_records_to_rewrite, on_deleted, new_key,
             new_doc_id, new_start, new_size, new_status):
         # # Fix types
-        if isinstance(self.single_leaf_record_format, six.text_type):
+        if isinstance(self.single_leaf_record_format, str):
             fixed_leaf = self.single_leaf_record_format.encode()
         else:
             fixed_leaf = self.single_leaf_record_format
-        if isinstance(new_key, six.text_type):
+        if isinstance(new_key, str):
             new_key = new_key.encode()
-        if isinstance(new_doc_id, six.text_type):
+        if isinstance(new_doc_id, str):
             new_doc_id = new_doc_id.encode()
-        if isinstance(new_status, six.text_type):
+        if isinstance(new_status, str):
             new_status = new_status.encode()
 
         if nr_of_records_to_rewrite == 0:  # just write at set position
@@ -1391,7 +1390,7 @@ class IU_TreeBasedIndex(Index):
         Splits full node in two separate ones, first half of records stays on old position,
         second half is written as new leaf at the end of file.
         """
-        if isinstance(new_key, six.text_type):
+        if isinstance(new_key, str):
             new_key = new_key.encode()
 
         half_size = self.node_capacity // 2
@@ -1535,13 +1534,13 @@ class IU_TreeBasedIndex(Index):
 
     def insert_first_record_into_leaf(self, leaf_start, key, doc_id, start, size, status):
         # Fix types
-        if isinstance(leaf_start, six.text_type):
+        if isinstance(leaf_start, str):
             leaf_start = leaf_start.encode()
-        if isinstance(key, six.text_type):
+        if isinstance(key, str):
             key = key.encode()
-        if isinstance(doc_id, six.text_type):
+        if isinstance(doc_id, str):
             doc_id = doc_id.encode()
-        if isinstance(status, six.text_type):
+        if isinstance(status, str):
             status = status.encode()
 
         self.buckets.seek(leaf_start)
@@ -1724,7 +1723,7 @@ class IU_TreeBasedIndex(Index):
             return curr_position
 
     def _find_key(self, key):
-        if isinstance(key, six.text_type):
+        if isinstance(key, str):
             key = codecs.encode(key, 'utf-8')
         containing_leaf_start = self._find_leaf_with_first_key_occurence(key)
         nr_of_elements, prev_leaf, next_leaf = (
@@ -1772,21 +1771,21 @@ class IU_TreeBasedIndex(Index):
         return leaf_start, record_index, doc_id, l_key, start, size, status
 
     def update(self, doc_id, key, u_start=0, u_size=0, u_status=b'o'):
-        if isinstance(doc_id, six.text_type):
+        if isinstance(doc_id, str):
             doc_id = doc_id.encode()
-        if isinstance(key, six.text_type):
+        if isinstance(key, str):
             key = codecs.encode(key, 'utf-8')
-        if isinstance(u_status, six.text_type):
+        if isinstance(u_status, str):
             u_status = u_status.encode()
 
         containing_leaf_start, element_index, old_doc_id, old_key, old_start, old_size, old_status = self._find_key_to_update(key, doc_id)
-        new_data = (old_doc_id, old_start, old_size, old_status)
         if not u_start:
-            new_data[1] = u_start
+            u_start = old_start
         if not u_size:
-            new_data[2] = u_size
+            u_size = old_size
         if not u_status:
-            new_data[3] = u_status
+            u_status = old_status
+        new_data = (old_doc_id, u_start, u_size, u_status)
         self._update_element(containing_leaf_start, element_index, new_data)
 
         self._find_key.delete(key)
@@ -1795,9 +1794,9 @@ class IU_TreeBasedIndex(Index):
         return True
 
     def delete(self, doc_id, key, start=0, size=0):
-        if isinstance(doc_id, six.text_type):
+        if isinstance(doc_id, str):
             doc_id = doc_id.encode()
-        if isinstance(key, six.text_type):
+        if isinstance(key, str):
             key = codecs.encode(key, 'utf-8')
 
         containing_leaf_start, element_index = self._find_key_to_update(
@@ -2067,18 +2066,18 @@ class IU_TreeBasedIndex(Index):
                     return
 
     def get(self, key):
-        if isinstance(key, six.text_type):
+        if isinstance(key, str):
             key = codecs.encode(key, 'utf-8')
         return self._find_key(self.make_key(key))
 
     def get_many(self, key, limit=1, offset=0):
-        if isinstance(key, six.text_type):
+        if isinstance(key, str):
             key = codecs.encode(key, 'utf-8')
         return self._find_key_many(self.make_key(key), limit, offset)
 
     def get_between(self, start, end, limit=1, offset=0, inclusive_start=True, inclusive_end=True):
         if start is None:
-            if isinstance(end, six.text_type):
+            if isinstance(end, str):
                 end = codecs.encode(end, 'utf-8')
             end = self.make_key(end)
             if inclusive_end:
@@ -2086,7 +2085,7 @@ class IU_TreeBasedIndex(Index):
             else:
                 return self._find_key_smaller(end, limit, offset)
         elif end is None:
-            if isinstance(start, six.text_type):
+            if isinstance(start, str):
                 start = codecs.encode(start, 'utf-8')
             start = self.make_key(start)
             if inclusive_start:
@@ -2094,9 +2093,9 @@ class IU_TreeBasedIndex(Index):
             else:
                 return self._find_key_bigger(start, limit, offset)
         else:
-            if isinstance(start, six.text_type):
+            if isinstance(start, str):
                 start = codecs.encode(start, 'utf-8')
-            if isinstance(end, six.text_type):
+            if isinstance(end, str):
                 end = codecs.encode(end, 'utf-8')
             start = self.make_key(start)
             end = self.make_key(end)
@@ -2260,7 +2259,7 @@ class IU_MultiTreeBasedIndex(IU_TreeBasedIndex):
             delete(doc_id, curr_key.encode(), start, size)
 
     def get(self, key):
-        if isinstance(key, six.text_type):
+        if isinstance(key, str):
             key = codecs.encode(key, 'utf-8')
         return super(IU_MultiTreeBasedIndex, self).get(key)
 

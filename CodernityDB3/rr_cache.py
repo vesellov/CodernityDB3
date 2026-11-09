@@ -16,10 +16,8 @@
 # limitations under the License.
 
 from __future__ import absolute_import
-import six
 import functools
 from random import choice
-from six.moves import range
 
 
 def cache1lvl(maxsize=100):
@@ -29,7 +27,7 @@ def cache1lvl(maxsize=100):
         @functools.wraps(user_function)
         def wrapper(key, *args, **kwargs):
             # print('rr_cache.1lvl.wrapper %r %r' % (user_function.__name__, key))
-            if isinstance(key, six.text_type):
+            if isinstance(key, str):
                 key = key.encode()            
             try:
                 result = cache1lvl[key]
@@ -46,7 +44,7 @@ def cache1lvl(maxsize=100):
 
         def delete(key):
             # print('rr_cache.1lvl.delete %r %r' % (user_function.__name__, key))
-            if isinstance(key, six.text_type):
+            if isinstance(key, str):
                 key = key.encode()            
             try:
                 del cache1lvl[key]
@@ -70,7 +68,7 @@ def cache2lvl(maxsize=100):
 #            return user_function(*args, **kwargs)
             key = args[0]
             # print('rr_cache.2lvl.wrapper %r %r' % (user_function.__name__, key))
-            if isinstance(key, six.text_type):
+            if isinstance(key, str):
                 key = key.encode()            
             try:
                 result = cache[key][args[1]]
@@ -98,7 +96,7 @@ def cache2lvl(maxsize=100):
 
         def delete(key, inner_key=None):
             # print('rr_cache.2lvl.delete %r %r' % (user_function.__name__, key))
-            if isinstance(key, six.text_type):
+            if isinstance(key, str):
                 key = key.encode()            
             if inner_key:
                 try:

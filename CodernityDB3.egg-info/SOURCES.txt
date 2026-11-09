@@ -1,5 +1,6 @@
 MANIFEST.in
 README.rst
+pyproject.toml
 setup.py
 CodernityDB3/__init__.py
 CodernityDB3/database.py
@@ -27,3 +28,9 @@ CodernityDB3.egg-info/PKG-INFO
 CodernityDB3.egg-info/SOURCES.txt
 CodernityDB3.egg-info/dependency_links.txt
 CodernityDB3.egg-info/top_level.txt
+tests/test_db.py
+tests/test_db_super_thread_safe.py
+tests/test_db_thread_safe.py
+tests/test_indexcreator_db.py
+tests/test_indexcreator_exec.py
+tests/test_patch.py

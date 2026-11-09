@@ -26,7 +26,8 @@ from CodernityDB3.tree_index import TreeBasedIndex
 from CodernityDB3.tree_index import MultiTreeBasedIndex
 from CodernityDB3.hash_index import MultiHashIndex
 from hashlib import md5
-from py.test import raises
+import pytest
+from pytest import raises
 import os
 import uuid
 
@@ -41,8 +42,9 @@ import uuid
         # self.db.destroy()
 
 
-def pytest_funcarg__db(request):
-    db = Database(os.path.join(str(request.getfuncargvalue('tmpdir')), 'db'))
+@pytest.fixture
+def db(tmpdir):
+    db = Database(os.path.join(str(tmpdir), 'db'))
     db.create()
     return db
 

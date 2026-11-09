@@ -40,6 +40,7 @@
 
 # Mac files
 .DS_Store
+._*
 
 # Build directories
 */dist/
@@ -69,3 +70,12 @@ plugins/report/html_report/js/database.js
 # Testing files
 .coverage
 htmlcov/
+.pytest_cache/
+build/
+dist/
+
+# Local AI tooling / credentials (never commit)
+ai_deepseek.sh
+deepseek.txt
+.z_ds/
+.y_ds/

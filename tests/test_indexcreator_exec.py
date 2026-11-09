@@ -30,21 +30,28 @@ from CodernityDB3.hash_index import HashIndex
 from CodernityDB3.tree_index import TreeBasedIndex
 from CodernityDB3.tree_index import MultiTreeBasedIndex
 from CodernityDB3.hash_index import MultiHashIndex
-from hashlib import md5
-from py.test import raises
+from hashlib import md5 as _md5
+import pytest
+from pytest import raises
 import os
 import uuid
 
 
-def pytest_funcarg__p(request):
-    p = Parser()
-    return p
+def md5(data):
+    if isinstance(data, str):
+        data = data.encode('utf-8')
+    return _md5(data)
+
+
+@pytest.fixture
+def p():
+    return Parser()
 
 
 def simple_compare(s, args_mkv, args_mk):
     p = Parser()
     n = "_" + uuid.uuid4().hex
-    exec(p.parse(s, n)[1] in globals())
+    exec(p.parse(s, n)[1], globals())
 
     # n2 = p.parse(s)
     # exec(n2 in globals())
@@ -64,7 +71,7 @@ def simple_compare(s, args_mkv, args_mk):
 def simple_compare_without_order(s, args_mkv, args_mk):
     p = Parser()
     n = "_" + uuid.uuid4().hex
-    exec(p.parse(s, n)[1] in globals())
+    exec(p.parse(s, n)[1], globals())
 
     for a, o in args_mkv:
         a, b = globals()[n]('test', 'test').make_key_value(a)
@@ -339,18 +346,18 @@ class TestIndexCreatorRightInput:
         hash_lim = 1
 
         make_key_value:
-        md5(a+'aaa')+'a',None
+        md5(a+b'aaa')+b'a',None
         make_key:
-        a != 'e' : md5(a)+a
+        a != b'e' : md5(a)+a
         a"""
 
-        simple_compare(s2, [({'a': 'a'}, (md5('aaaa').digest() + 'a', None)),
-                            ({'a': 'qwerty'}, (
-                             md5('qwertyaaa').digest() + 'a', None))
+        simple_compare(s2, [({'a': b'a'}, (md5('aaaa').digest() + b'a', None)),
+                            ({'a': b'qwerty'}, (
+                             md5('qwertyaaa').digest() + b'a', None))
                             ],
                        [
-                       ({'a': 'e'}, 'e'),
-                       ({'a': 'eeee'}, md5('eeee').digest() + 'eeee')
+                       ({'a': b'e'}, b'e'),
+                       ({'a': b'eeee'}, md5('eeee').digest() + b'eeee')
                        ])
 
     def test_no_conditionals_return_dicts(self):
@@ -561,7 +568,7 @@ class TestIndexCreatorRightInput:
         0"""
 
         _, n = p.parse(s)
-        exec(n in globals())
+        exec(n, globals())
         n = n.splitlines()[1][2:]
         assert globals()[n]('test', 'test').hash_lim == 1
         assert globals()[n]('test', 'test').entry_struct.format[4:7] == '32s'
@@ -576,7 +583,7 @@ class TestIndexCreatorRightInput:
         make_key:
         0"""
         _, n2 = p.parse(s2)
-        exec(n2 in globals())
+        exec(n2, globals())
         n2 = n2.splitlines()[1][2:]
         assert globals()[n2]('test', 'test').hash_lim == 600
         assert globals()[n2]('test', 'test').entry_struct.format[4:7] == '32s'
@@ -591,7 +598,7 @@ class TestIndexCreatorRightInput:
         make_key:
         0"""
         _, n3 = p.parse(s3)
-        exec(n3 in globals())
+        exec(n3, globals())
         n3 = n3.splitlines()[1][2:]
         assert globals()[n3]('test', 'test').hash_lim == 1
         assert globals()[n3]('test', 'test').entry_struct.format[4] == 'I'
@@ -605,7 +612,7 @@ class TestIndexCreatorRightInput:
         make_key:
         0"""
         _, n4 = p.parse(s4)
-        exec(n4 in globals())
+        exec(n4, globals())
         n4 = n4.splitlines()[1][2:]
         assert globals()[n4]('test', 'test').key_format == 'I'
 

@@ -17,7 +17,6 @@
 
 
 from __future__ import absolute_import
-import six
 import functools
 from heapq import nsmallest
 from operator import itemgetter
@@ -52,7 +51,7 @@ def create_cache1lvl(lock_obj):
             @functools.wraps(user_function)
             def wrapper(key, *args, **kwargs):
                 # print('lfu_cache_with_lock.1lvl.wrapper %r' % key)
-                if isinstance(key, six.text_type):
+                if isinstance(key, str):
                     key = key.encode()            
                 try:
                     result = cache[key]
@@ -77,7 +76,7 @@ def create_cache1lvl(lock_obj):
 
             def delete(key):
                 # print('lfu_cache_with_lock.1lvl.delete %r' % key)
-                if isinstance(key, six.text_type):
+                if isinstance(key, str):
                     key = key.encode()            
                 try:
                     del cache[key]
@@ -108,14 +107,14 @@ def create_cache2lvl(lock_obj):
             def wrapper(*args, **kwargs):
                 key = args[0]
                 # print('lfu_cache_with_lock.2lvl.delete %r' % key)
-                if isinstance(key, six.text_type):
+                if isinstance(key, str):
                     key = key.encode()            
                 try:
                     result = cache[key][args[1]]
                 except KeyError:
                     with lock:
                         if wrapper.cache_size == maxsize:
-                            to_delete = maxsize / 10 or 1
+                            to_delete = maxsize // 10 or 1
                             for k1, k2, v in nsmallest(to_delete,
                                                        twolvl_iterator(
                                                            use_count),
@@ -142,7 +141,7 @@ def create_cache2lvl(lock_obj):
 
             def delete(key, *args):
                 # print('lfu_cache_with_lock.2lvl.delete %r' % key)
-                if isinstance(key, six.text_type):
+                if isinstance(key, str):
                     key = key.encode()            
                 if args:
                     try:

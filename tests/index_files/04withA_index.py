@@ -35,6 +35,8 @@ class WithAIndex(HashIndex):
         return None
 
     def make_key(self, key):
-        if not isinstance(key, bytes):
-            key = bytes(key, 'utf-8')
+        if isinstance(key, int):
+            key = str(key)
+        if isinstance(key, str):
+            key = key.encode()
         return md5(key).hexdigest()

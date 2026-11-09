@@ -17,7 +17,6 @@
 
 
 from __future__ import absolute_import
-import six
 import functools
 from heapq import nsmallest
 from operator import itemgetter
@@ -43,7 +42,7 @@ def cache1lvl(maxsize=100):
         @functools.wraps(user_function)
         def wrapper(key, *args, **kwargs):
             # print('lfu_cache1lvl.wrapper %r' % key)
-            if isinstance(key, six.text_type):
+            if isinstance(key, str):
                 key = key.encode()            
             try:
                 result = cache[key]
@@ -66,7 +65,7 @@ def cache1lvl(maxsize=100):
 
         def delete(key):
             # print('lfu_cache1lvl.delete %r' % key)
-            if isinstance(key, six.text_type):
+            if isinstance(key, str):
                 key = key.encode()            
             try:
                 del cache[key]
@@ -102,7 +101,7 @@ def cache2lvl(maxsize=100):
 #            return user_function(*args, **kwargs)
             key = args[0]
             # print('cache2lvl.wrapper %r' % key)
-            if isinstance(key, six.text_type):
+            if isinstance(key, str):
                 key = key.encode()            
             try:
                 result = cache[key][args[1]]
@@ -133,7 +132,7 @@ def cache2lvl(maxsize=100):
 
         def delete(key, inner_key=None):
             # print('cache2lvl.delete %r' % key)
-            if isinstance(key, six.text_type):
+            if isinstance(key, str):
                 key = key.encode()            
             if inner_key is not None:
                 try:

@@ -1,100 +1,62 @@
-This repository
-===============
+CodernityDB3
+============
 
+Python 3 port of `CodernityDB <http://labs.codernity.com/codernitydb>`_ — a pure
+Python, fast, multiplatform, schema-less, embedded NoSQL database.  The original
+project was written for Python 2.x; this repository keeps the same API and file
+format while supporting modern Python versions, including **Python 3.14**.
 
-This is an intent **to port CodernityDB to Python 3**, from de [original source](http://labs.codernity.com/codernitydb), written for Python 2.x, 
+CodernityDB has optional HTTP server (CodernityDB-HTTP) and Python client
+(CodernityDB-PyClient) projects.  This package is the embedded database itself.
 
-CodernityDB is opensource, pure python (no 3rd party dependency), fast (really fast check Speed in documentation if you don't believe in words), multiplatform, schema-less, NoSQL_ database. It has optional support for HTTP server version (CodernityDB-HTTP), and also Python client library (CodernityDB-PyClient) that aims to be 100% compatible with embeded version.
+Features
+--------
 
-**Although this port is a beta** yet, it works in the basic usage cases.
+* No runtime dependencies — only the Python standard library.
+* Schema-less documents stored as Python dictionaries.
+* Hash indexes (unique and non-unique) for fast key lookups.
+* Tree-based (ordered) indexes for range queries.
+* Multiple indexes per database, each stored in its own files.
+* Textual index definitions parsed at runtime (no separate compiler needed).
+* Thread-safe, super-thread-safe and gevent database variants.
+* Sharded unique hash index for the ``id`` index.
+* Python 3.8+ supported, tested on Python 3.14.
 
-Calling for help
-================
+Installation
+------------
 
-Any help to port CodernityDB to Python 3 is wellcome. It's a hard works. 
+From this repository::
 
-Feel free to clone the repo an send any patch.
+    python3 -m pip install .
 
-Status
-======
+Or for development::
 
-Following the official examples, I was able to determinate:
+    python3 -m pip install -e .
+    python3 -m pip install -r requirements.txt
 
-- Insert/Save: Works oks!
-- Get query: Works oks!
-- Duplicates: Works oks!
-- Update/delete: Doesn't works yet.
-- Ordered data: Doesn't works yet.
+Requirements for running the test suite are listed in ``requirements.txt``.
+There are no runtime requirements beyond the standard library.
 
-
-Ported examples
-===============
-
-There he ported examples:
-
-Insert/Save
------------
-
-.. code-block:: python
-
-    from CodernityDB3.database import Database
-
-    def main():
-        db = Database('/tmp/tut1')
-        db.create()
-        for x in range(100):
-            print(db.insert(dict(x=x)))
-        for curr in db.all('id'):
-            print(curr)
-
-    main()
-
-
-Get query
----------
+Quick start: insert and read
+----------------------------
 
 .. code-block:: python
 
     from CodernityDB3.database import Database
-    from CodernityDB3.hash_index import HashIndex
 
+    db = Database('/tmp/tut1')
+    db.create()
 
-    class WithXIndex(HashIndex):
+    for x in range(100):
+        print(db.insert(dict(x=x)))
 
-        def __init__(self, *args, **kwargs):
-            kwargs['key_format'] = 'I'
-            super(WithXIndex, self).__init__(*args, **kwargs)
+    for curr in db.all('id'):
+        print(curr)
 
-        def make_key_value(self, data):
-            a_val = data.get("x")
-            if a_val is not None:
-                return a_val, None
-            return None
+    db.close()
 
-        def make_key(self, key):
-            return key
-
-
-    def main():
-        db = Database('/tmp/tut2')
-        db.create()
-        x_ind = WithXIndex(db.path, 'x')
-        db.add_index(x_ind)
-
-        for x in range(100):
-            db.insert(dict(x=x))
-
-        for y in range(100):
-            db.insert(dict(y=y))
-
-        print(db.get('x', 10, with_doc=True))        
-
-    if __name__ == '__main__':
-        main()
-    
-
-Duplicates
-----------
+Custom hash index
+-----------------
 
 .. code-block:: python
 
@@ -106,10 +68,10 @@ Duplicates
 
         def __init__(self, *args, **kwargs):
             kwargs['key_format'] = 'I'
-            super(WithXIndex, self).__init__(*args, **kwargs)
+            super().__init__(*args, **kwargs)
 
         def make_key_value(self, data):
-            a_val = data.get("x")
+            a_val = data.get('x')
             if a_val is not None:
                 return a_val, None
             return None
@@ -118,32 +80,67 @@ Duplicates
             return key
 
 
-    def main():
-        db = Database('/tmp/tut3')
-        db.create()
-        x_ind = WithXIndex(db.path, 'x')
-        db.add_index(x_ind)
+    db = Database('/tmp/tut2')
+    db.create()
+    x_ind = WithXIndex(db.path, 'x')
+    db.add_index(x_ind)
 
+    for x in range(100):
+        db.insert(dict(x=x))
+
+    for y in range(100):
+        db.insert(dict(y=y))
+
+    print(db.get('x', 10, with_doc=True))
+    db.close()
+
+Duplicate keys
+--------------
+
+Hash indexes support multiple documents for the same key:
+
+.. code-block:: python
+
+    from CodernityDB3.database import Database
+    from CodernityDB3.hash_index import HashIndex
+
+
+    class WithXIndex(HashIndex):
+
+        def __init__(self, *args, **kwargs):
+            kwargs['key_format'] = 'I'
+            super().__init__(*args, **kwargs)
+
+        def make_key_value(self, data):
+            a_val = data.get('x')
+            if a_val is not None:
+                return a_val, None
+            return None
+
+        def make_key(self, key):
+            return key
+
+
+    db = Database('/tmp/tut3')
+    db.create()
+    db.add_index(WithXIndex(db.path, 'x'))
+
+    for _ in range(2):
         for x in range(100):
             db.insert(dict(x=x))
 
-        for x in range(100):
-            db.insert(dict(x=x))
+    print(db.get('x', 10, with_doc=True))
 
-        for y in range(100):
-            db.insert(dict(y=y))
+    for curr in db.get_many('x', 10, limit=-1, with_doc=True):
+        print(curr)
 
-        print(db.get('x', 10, with_doc=True))
-        for curr in db.get_many('x', 10, limit=-1, with_doc=True):
-            print(curr)
+    db.close()
 
-    if __name__ == '__main__':
-        main()
+Ordered tree index, update and delete
+-------------------------------------
 
-    
-    
-Update/delete
--------------
+Tree-based indexes keep documents ordered by key and support range queries,
+updates and deletes:
 
 .. code-block:: python
 
@@ -156,7 +153,7 @@ Update/delete
         def __init__(self, *args, **kwargs):
             kwargs['node_capacity'] = 10
             kwargs['key_format'] = 'I'
-            super(WithXIndex, self).__init__(*args, **kwargs)
+            super().__init__(*args, **kwargs)
 
         def make_key_value(self, data):
             t_val = data.get('x')
@@ -168,86 +165,89 @@ Update/delete
             return key
 
 
-    def main():
-        db = Database('/tmp/tut_update')
-        db.create()
-        x_ind = WithXIndex(db.path, 'x')
-        db.add_index(x_ind)
+    db = Database('/tmp/tut4')
+    db.create()
+    db.add_index(WithXIndex(db.path, 'x'))
 
-        # full examples so we had to add first the data
-        # the same code as in previous step
+    for x in range(100):
+        db.insert(dict(x=x))
 
-        for x in range(100):
-            db.insert(dict(x=x))
+    for curr in db.get_many('x', start=15, end=25, limit=-1, with_doc=True):
+        print(curr)
 
-        for y in range(100):
-            db.insert(dict(y=y))
+    for curr in db.all('x', with_doc=True):
+        doc = curr['doc']
+        if curr['key'] % 7 == 0:
+            db.delete(doc)
+        elif curr['key'] % 5 == 0:
+            doc['updated'] = True
+            db.update(doc)
 
-        # end of insert part
+    print(db.count(db.all, 'x'))
+    db.close()
 
-        print(db.count(db.all, 'x'))
+Status
+------
 
-        for curr in db.all('x', with_doc=True):
-            doc = curr['doc']
-            if curr['key'] % 7 == 0:
-                db.delete(doc)
-            elif curr['key'] % 5 == 0:
-                doc['updated'] = True
-                db.update(doc)
+==============  =========================================================
+Operation       Status
+==============  =========================================================
+Insert / Save   Works
+Get / get_many  Works
+Duplicates      Works (hash and tree indexes)
+Update / delete Works
+Ordered data    Works (tree indexes, range queries)
+Thread safety   Works (``ThreadSafeDatabase``, ``SuperThreadSafeDatabase``)
+Gevent          Works (``GeventDatabase``)
+Sharding        Works (``ShardedUniqueHashIndex``)
+==============  =========================================================
 
-        print(db.count(db.all, 'x'))
+Index files
+-----------
 
-        for curr in db.all('x', with_doc=True):
-            print(curr)
+When an index is added, CodernityDB generates a Python file in
+``<db_path>/_indexes/NN<index_name>.py`` and loads it from there.  The database
+directory also contains ``*_buck`` (index metadata) and ``*_stor`` (document
+values) files per index.  Back up the whole database directory; do not edit
+``_indexes`` files by hand unless you know what you are doing.
 
-    if __name__ == '__main__':
-        main()
+Python 3.14 compatibility
+-------------------------
 
+Version 0.4.3 modernizes the port:
 
-Ordered
+* The ``six`` dependency was removed; the code uses ``str``/``bytes`` directly.
+* ``collections.Callable`` (removed in Python 3.10) was replaced with
+  ``callable()``.
+* Generators no longer raise ``StopIteration`` explicitly (PEP 479).
+* Integer division in the LFU cache was fixed.
+* The test suite uses modern pytest fixtures instead of the removed
+  ``pytest_funcarg__`` hooks.
+* Minor tree-index update and sharded-index update bugs were fixed.
+
+Running tests
+-------------
+
+The suite uses pytest.  Tests in different files patch global state (for
+example, the cache implementations), so run each file in its own process:
+
+::
+
+    python3 -m pytest tests/test_db.py
+    python3 -m pytest tests/test_patch.py
+    python3 -m pytest tests/test_db_thread_safe.py
+    python3 -m pytest tests/test_db_super_thread_safe.py
+    python3 -m pytest tests/test_indexcreator_db.py tests/test_indexcreator_exec.py
+
+You can tune the number of inserts and random operations::
+
+    python3 -m pytest tests/test_db.py --inserts=100 --operations=200
+
+The same commands are available through tox (``tox_no_cov.ini`` and
+``tox_cov.ini``).
+
+License
 -------
 
-.. code-block:: python
-
-    from CodernityDB3.database import Database
-    from CodernityDB3.tree_index import TreeBasedIndex
-
-
-    class WithXIndex(TreeBasedIndex):
-
-        def __init__(self, *args, **kwargs):
-            kwargs['node_capacity'] = 10
-            kwargs['key_format'] = 'I'
-            super(WithXXIndex, self).__init__(*args, **kwargs)
-
-        def make_key_value(self, data):
-            t_val = data.get('x')
-            if t_val is not None:
-                return t_val, data
-            return None
-
-        def make_key(self, key):
-            return key
-
-
-    def main():
-        db = Database('/tmp/tut4')
-        db.create()
-        x_ind = WithXIndex(db.path, 'x')
-        db.add_index(x_ind)
-
-        for x in range(11):
-            db.insert(dict(x=x))
-
-        for y in range(11):
-            db.insert(dict(y=y))
-
-        print(db.get('x', 10, with_doc=True))
-
-        for curr in db.get_many('x', start=15, end=25, limit=-1, with_doc=True):
-            print(curr)
-
-
-    if __name__ == '__main__':
-        main()
-    
+Apache License 2.0.  See the source headers for details.  The original
+CodernityDB is copyright 2011-2013 Codernity.

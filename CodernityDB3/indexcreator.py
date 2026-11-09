@@ -21,7 +21,6 @@ import re
 import tokenize
 import token
 import uuid
-from six.moves import range
 
 
 class IndexCreatorException(Exception):
@@ -83,7 +82,8 @@ class Parser(object):
         elif e > l:
             return s[:l]
         else:
-            return s.rjust(l,b'_')\n""", False),
+            fill = b'_' if isinstance(s, bytes) else '_'
+            return s.rjust(l,fill)\n""", False),
 
             'prefix': (
                 """    def prefix(self,s,m,l,f):
@@ -178,21 +178,21 @@ class Parser(object):
         }
 
         def is_num(s):
-            m = re.search('[^0-9*()+\-\s/]+', s)
+            m = re.search(r'[^0-9*()+\-\s/]+', s)
             return not m
 
         def is_string(s):
-            m = re.search('\s*(?P<a>[\'\"]+).*?(?P=a)\s*', s)
+            m = re.search(r'\s*(?P<a>[\'"]+).*?(?P=a)\s*', s)
             return m
 
-        data = re.split('make_key_value\:', data)
+        data = re.split(r'make_key_value:', data)
 
         if len(data) < 2:
             raise IndexCreatorFunctionException(
                 "Couldn't find a definition of make_key_value function!\n")
 
-        spl1 = re.split('make_key\:', data[0])
-        spl2 = re.split('make_key\:', data[1])
+        spl1 = re.split(r'make_key:', data[0])
+        spl2 = re.split(r'make_key:', data[1])
 
         self.funcs_rev = False
 
@@ -204,15 +204,15 @@ class Parser(object):
         else:
             data.append("key")
 
-        if data[1] == re.search('\s*', data[1], re.S | re.M).group(0):
+        if data[1] == re.search(r'\s*', data[1], re.S | re.M).group(0):
             raise IndexCreatorFunctionException(
                 "Empty function body ",
                 len(re.split('\n', data[0])) + (len(re.split('\n', data[2])) if self.funcs_rev else 1) - 1)
-        if data[2] == re.search('\s*', data[2], re.S | re.M).group(0):
+        if data[2] == re.search(r'\s*', data[2], re.S | re.M).group(0):
             raise IndexCreatorFunctionException(
                 "Empty function body ",
                 len(re.split('\n', data[0])) + (1 if self.funcs_rev else len(re.split('\n', data[1]))) - 1)
-        if data[0] == re.search('\s*', data[0], re.S | re.M).group(0):
+        if data[0] == re.search(r'\s*', data[0], re.S | re.M).group(0):
             raise IndexCreatorValueException("You didn't set any properity or you set them not at the begining of the code\n")
 
         data = [re.split(
@@ -228,7 +228,7 @@ class Parser(object):
                         s = self.predata[0][i][k + 1:]
                         self.predata[0][i] = self.predata[0][i][:k + 1]
 
-                        m = re.search('\s+', s.strip())
+                        m = re.search(r'\s+', s.strip())
                         if not is_string(s) and not m:
                             s = "'" + s.strip() + "'"
                         self.predata[0][i] += s
@@ -450,7 +450,7 @@ class Parser(object):
 
         def check_if_empty(a):
             for i in a:
-                if i not in [token.NEWLINE, token.INDENT, token.ENDMARKER]:
+                if i[0] not in [token.NEWLINE, token.INDENT, token.ENDMARKER]:
                     return False
             return True
         if st == 0:
@@ -533,9 +533,11 @@ class Parser(object):
         return -1
 
     def handle_prop_line(self, d):
+        # Python 3.7+ tokenizer emits an explicit NEWLINE token (often with
+        # an empty string) even for the last line; drop structural tokens.
+        while d and d[-1][0] in (token.NEWLINE, token.ENDMARKER):
+            d = d[:-1]
         d_len = len(d)
-        if d[d_len - 1][0] == token.ENDMARKER:
-            d_len -= 1
 
         if d_len < 3:
             raise IndexCreatorValueException("Can't handle properity assingment ", self.cnt_line_nr(d[0][4], 0))
@@ -556,7 +558,7 @@ class Parser(object):
                         "Wrong value to assign", self.cnt_line_nr(line, 0))
 
                 if t == token.STRING:
-                    m = re.search('\s*(?P<a>[\'\"]+)(.*?)(?P=a)\s*', tk)
+                    m = re.search(r'\s*(?P<a>[\'"]+)(.*?)(?P=a)\s*', tk)
                     if m:
                         tk = m.groups()[1]
                 elif t != token.NAME:

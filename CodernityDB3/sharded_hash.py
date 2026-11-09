@@ -17,7 +17,6 @@
 
 
 from __future__ import absolute_import
-import six
 
 from CodernityDB3.hash_index import UniqueHashIndex, HashIndex
 from CodernityDB3.sharded_index import ShardedIndex
@@ -50,7 +49,7 @@ from CodernityDB3.sharded_index import ShardedIndex
             """
             _id, value = db_obj.id_ind.make_key_value(data)  # may be improved
             trg_shard = _id[:2]
-            if isinstance(trg_shard, six.binary_type):
+            if isinstance(trg_shard, bytes):
                 trg_shard = trg_shard.decode()
             storage = db_obj.id_ind.shards_r[trg_shard].storage
             start, size = storage.insert(value)
@@ -77,14 +76,14 @@ from CodernityDB3.sharded_index import ShardedIndex
 
     def delete(self, key, *args, **kwargs):
         trg_shard = key[:2]
-        if isinstance(trg_shard, six.binary_type):
+        if isinstance(trg_shard, bytes):
             trg_shard = trg_shard.decode()
         op = self.shards_r[trg_shard]
         return op.delete(key, *args, **kwargs)
 
     def update(self, key, *args, **kwargs):
         trg_shard = key[:2]
-        if isinstance(trg_shard, six.binary_type):
+        if isinstance(trg_shard, bytes):
             trg_shard = trg_shard.decode()
         self.last_used = int(trg_shard, 16)
         op = self.shards_r[trg_shard]
@@ -92,7 +91,7 @@ from CodernityDB3.sharded_index import ShardedIndex
 
     def insert(self, key, *args, **kwargs):
         trg_shard = key[:2]  # in most cases it's in create_key BUT not always
-        if isinstance(trg_shard, six.binary_type):
+        if isinstance(trg_shard, bytes):
             trg_shard = trg_shard.decode()
         self.last_used = int(key[:2], 16)
         op = self.shards_r[trg_shard]
@@ -100,7 +99,7 @@ from CodernityDB3.sharded_index import ShardedIndex
 
     def get(self, key, *args, **kwargs):
         trg_shard = key[:2]
-        if isinstance(trg_shard, six.binary_type):
+        if isinstance(trg_shard, bytes):
             trg_shard = trg_shard.decode()
         self.last_used = int(trg_shard, 16)
         op = self.shards_r[trg_shard]
@@ -136,28 +135,28 @@ class IU_ShardedHashIndex(ShardedIndex):
 
     def delete(self, doc_id, key, *args, **kwargs):
         trg_shard = self.calculate_shard(key)
-        if isinstance(trg_shard, six.binary_type):
+        if isinstance(trg_shard, bytes):
             trg_shard = trg_shard.decode()
         op = self.shards_r[trg_shard]
         return op.delete(doc_id, key, *args, **kwargs)
 
     def insert(self, doc_id, key, *args, **kwargs):
         trg_shard = self.calculate_shard(key)
-        if isinstance(trg_shard, six.binary_type):
+        if isinstance(trg_shard, bytes):
             trg_shard = trg_shard.decode()
         op = self.shards_r[trg_shard]
         return op.insert(doc_id, key, *args, **kwargs)
 
     def update(self, doc_id, key, *args, **kwargs):
         trg_shard = self.calculate_shard(key)
-        if isinstance(trg_shard, six.binary_type):
+        if isinstance(trg_shard, bytes):
             trg_shard = trg_shard.decode()
         op = self.shards_r[trg_shard]
-        return op.insert(doc_id, key, *args, **kwargs)
+        return op.update(doc_id, key, *args, **kwargs)
 
     def get(self, key, *args, **kwargs):
         trg_shard = self.calculate_shard(key)
-        if isinstance(trg_shard, six.binary_type):
+        if isinstance(trg_shard, bytes):
             trg_shard = trg_shard.decode()
         op = self.shards_r[trg_shard]
         return op.get(key, *args, **kwargs)

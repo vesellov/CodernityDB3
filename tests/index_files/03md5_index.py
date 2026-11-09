@@ -27,4 +27,6 @@ class Md5Index(HashIndex):
         return md5(data['name'].encode()).hexdigest(), {}
 
     def make_key(self, key):
+        if isinstance(key, str):
+            key = key.encode()
         return md5(key).hexdigest()

@@ -27,7 +27,6 @@ from CodernityDB3.debug_stuff import database_step_by_step
 
 from CodernityDB3 import rr_cache
 
-import six
 import pytest
 import os
 import random
@@ -73,9 +72,14 @@ class Md5Index(HashIndex):
         super(Md5Index, self).__init__(*args, **kwargs)
 
     def make_key_value(self, data):
-        return md5(data['name']).digest(), None
+        key = data['name']
+        if isinstance(key, str):
+            key = key.encode()
+        return md5(key).digest(), None
 
     def make_key(self, key):
+        if isinstance(key, str):
+            key = key.encode()
         return md5(key).digest()
 
 
@@ -85,7 +89,7 @@ class WithAIndex2(HashIndex):
         # kwargs['entry_line_format'] = '<32s32sIIcI'
         kwargs['key_format'] = '16s'
         kwargs['hash_lim'] = 4 * 1024
-        super(WithAIndex, self).__init__(*args, **kwargs)
+        super(WithAIndex2, self).__init__(*args, **kwargs)
 
     def make_key_value(self, data):
         a_val = data.get("a")

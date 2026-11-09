@@ -16,7 +16,6 @@
 # limitations under the License.
 
 from __future__ import absolute_import
-import six
 
 from CodernityDB3.env import cdb_environment
 from CodernityDB3.database import PreconditionsException, RevConflict, Database
@@ -97,7 +96,6 @@ class SafeDatabase(Database):
 
     def initialize(self, *args, **kwargs):
         with self.close_open_lock:
-            self.close_open_lock.acquire()
             res = super(SafeDatabase, self).initialize(*args, **kwargs)
             for name in self.indexes_names.keys():
                 self.indexes_locks[name] = cdb_environment['rlock_obj']()
@@ -161,7 +159,7 @@ class SafeDatabase(Database):
             self.main_lock.release()
 
     def reindex_index(self, index, *args, **kwargs):
-        if isinstance(index, six.string_types):
+        if isinstance(index, str):
             if not index in self.indexes_names:
                 raise PreconditionsException("No index named %s" % index)
             index = self.indexes_names[index]

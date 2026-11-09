@@ -17,7 +17,6 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-import six
 import os
 import io
 import codecs
@@ -49,7 +48,6 @@ from CodernityDB3.env import cdb_environment
 from random import randrange
 
 import warnings
-import collections
 import codecs
 
 
@@ -64,7 +62,13 @@ import marshal
 import struct
 import shutil
 
-from hashlib import md5
+from hashlib import md5 as _md5
+
+
+def md5(data):
+    if isinstance(data, str):
+        data = data.encode('utf-8')
+    return _md5(data)
 
 # custom db code start
 # db_custom
@@ -155,7 +159,7 @@ class Database(object):
         if not self.opened:
             raise DatabaseIsNotOpened("Database is not opened")
 
-    def set_indexes(self, indexes=[]):
+    def set_indexes(self, indexes=None):
         """
         Set indexes using ``indexes`` param
 
@@ -163,6 +167,8 @@ class Database(object):
         :type indexes: iterable of :py:class:`CodernityDB3.index.Index` objects.
 
         """
+        if indexes is None:
+            indexes = []
         for ind in indexes:
             self.add_index(ind, create=False)
 
@@ -780,7 +786,7 @@ for ID index. You should update that index \
         :param index: the index to destroy
         :type index: :py:class:`CodernityDB3.index.Index`` instance, or string
         """
-        if isinstance(index, six.string_types):
+        if isinstance(index, str):
             if not index in self.indexes_names:
                 raise PreconditionsException("No index named %s" % index)
             index = self.indexes_names[index]
@@ -806,7 +812,7 @@ for ID index. You should update that index \
         :param index: the index to destroy
         :type index: :py:class:`CodernityDB3.index.Index`` instance, or string
         """
-        if isinstance(index, six.string_types):
+        if isinstance(index, str):
             if not index in self.indexes_names:
                 raise PreconditionsException("No index named %s" % index)
             index = self.indexes_names[index]
@@ -843,7 +849,7 @@ for ID index. You should update that index \
         :param index: the index to reindex
         :type index: :py:class:`CodernityDB3.index.Index`` instance, or string
         """
-        if isinstance(index, six.string_types):
+        if isinstance(index, str):
             if not index in self.indexes_names:
                 raise PreconditionsException("No index named %s" % index)
             index = self.indexes_names[index]
@@ -927,9 +933,9 @@ for ID index. You should update that index \
             raise PreconditionsException(
                 "`_rev` must be valid bytes object")
         _id, new_rev = self._update_indexes(_rev, data)
-        if isinstance(_id, six.binary_type):
+        if isinstance(_id, bytes):
             _id = _id.decode()
-        if isinstance(new_rev, six.binary_type):
+        if isinstance(new_rev, bytes):
             new_rev = new_rev.decode()
         ret = {'_id': _id, '_rev': new_rev}
         data.update(ret)
@@ -948,7 +954,7 @@ for ID index. You should update that index \
         """
         # if not self.indexes_names.has_key(index_name):
         #     raise DatabaseException, "Invalid index name"
-        if isinstance(key, six.text_type):
+        if isinstance(key, str):
             key = codecs.encode(key, 'utf-8')
         try:
             ind = self.indexes_names[index_name]
@@ -1086,8 +1092,8 @@ for ID index. You should update that index \
 
         :param index_name: index name to perform action.
         :param target_funct: target function name (without *run* prefix)
-        :param \*args: ``*args`` for function
-        :param \*\*kwargs: ``**kwargs`` for function
+        :param \\*args: ``*args`` for function
+        :param \\*\\*kwargs: ``**kwargs`` for function
 
         """
         try:
@@ -1212,7 +1218,7 @@ for ID index. You should update that index \
 
         props = {}
         for key, value in db_index.__dict__.items():
-            if not isinstance(value, collections.Callable):  # not using inspect etc...
+            if not callable(value):  # not using inspect etc...
                 props[key] = value
 
         return props
